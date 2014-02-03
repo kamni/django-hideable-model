@@ -9,10 +9,11 @@ class HideableModelManager(models.Manager):
     hidden/deleted objects. The 'include_hidden' can be passed to any of the
     three methods to include these hidden objects as part of the query.
     
-    To use this Manager, create a Model class with a BooleanField to indicate 
-    whether a given object should be hidden/disabled. If the field is not 
-    called 'deleted', create a subclass of this manager that sets 
-    'hidden_name_field' to match the name of the desired field.
+    To use this Manager, simply create a Model that extends 
+    AbstractHideableModel below. If you want to write your own Model that has
+    a custom hidden field boolean, create a subclass of this manager that sets 
+    'hidden_name_field' to match the name of the desired field, and use the new
+    manager subclass for the 'objects' of your custom Model.
     
     NOTES: 
     
@@ -75,3 +76,15 @@ class HideableModelManager(models.Manager):
             return self.get(include_hidden=True, **lookup), False
         except self.model.DoesNotExist:
             return self._create_object_from_params(lookup, params)
+
+
+class AbstractHideableModel(models.Model):
+    """
+    Abstract Django model that provides support for using the 'deleted' field
+    to hide objects instead of deleting them.
+    """
+    deleted = models.BooleanField(default=False)
+    objects = HideableModelManager()
+    
+    class Meta:
+        abstract = True
