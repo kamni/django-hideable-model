@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 setup(
-    name='django-disabled-model',
+    name='hideable_model',
     version='0.1',
     description='Django plugin to allow model objects in the db that are disabled',
     long_description=open(os.path.join(ROOT, 'README.md')).read(),
