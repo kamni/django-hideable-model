@@ -28,8 +28,11 @@ TODO: write
 ## Setup
 
 This app does not have any Django models that need to be created in the
-database, so it does not need to be added to INSTALLED_APPS in your settings.py
-file.
+database for normal usage, so it does not need to be added to INSTALLED_APPS in
+your settings.py file if you only want to use this in your project.
+
+If you want to run the tests for this app, please include it in INSTALLED_APPS
+so the test models get created.
 
 ## Usage
 

@@ -11,7 +11,7 @@ from django.db import models
 ################################################################################
 
 if 'test' in sys.argv:
-    from hidden_model.db.models import HideableModelManager
+    from hideable_model.db.models import HideableModelManager
 
     class HiddenModel(models.Model):
         name = models.CharField(max_length=10)
