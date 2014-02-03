@@ -8,9 +8,48 @@ from hideable_model.db.models import *
 
 class HideableModelManagerTests(TestCase):
     def test_all(self):
-        pass
+        HiddenModel.objects.all(include_hidden=True).delete()
+        CustomHiddenModel.objects.all(include_hidden=True).delete()
+        
+        # default, no existing models
+        self.assertEquals([], list(HiddenModel.objects.all()))
+        
+        # default, not deleted
+        hm1 = HiddenModel.objects.create(name="test-7499", deleted=False)
+        hm2 = HiddenModel.objects.create(name="test-9585", deleted=False)
+        self.assertEquals([hm1, hm2], list(HiddenModel.objects.all()))
+        
+        # default, deleted
+        HiddenModel.objects.create(name="test-5799", deleted=True)
+        self.assertEquals([hm1, hm2], list(HiddenModel.objects.all()))
+        
+        # custom, no existing models
+        self.assertEquals([], list(CustomHiddenModel.objects.all()))
+        
+        # custom, not deleted
+        chm1 = CustomHiddenModel.objects.create(name="test-7499", disabled=False)
+        chm2 = CustomHiddenModel.objects.create(name="test-9585", disabled=False)
+        self.assertEquals([chm1, chm2], list(CustomHiddenModel.objects.all()))
+        
+        # custom, deleted
+        CustomHiddenModel.objects.create(name="test-5799", disabled=True)
+        self.assertEquals([chm1, chm2], list(CustomHiddenModel.objects.all()))
     
     def test_all__include_hidden(self):
+        HiddenModel.objects.all(include_hidden=True).delete()
+        CustomHiddenModel.objects.all(include_hidden=True).delete()
+        
+        # default, no existing models
+        
+        # default, not deleted
+        
+        # default, deleted
+        
+        # custom, no existing models
+        
+        # custom, not deleted
+        
+        # custom, deleted
         pass
     
     def test_filter(self):
