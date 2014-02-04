@@ -7,6 +7,59 @@ from hideable_model.db.models import *
 
 
 class HideableModelManagerTests(TestCase):
+    def test__kwargs_for_query(self):   
+        # default, no include_hidden flag, no hidden field specified
+        self.assertEquals({"test": 3, "deleted": False}, 
+                          HiddenModel.objects._kwargs_for_query({"test": 3}))
+        
+        # default, no include_hidden flag, hidden field specified
+        for deleted in (True, False):
+            self.assertEquals({"test": 3, "deleted": deleted},
+                              HiddenModel.objects._kwargs_for_query({"test": 3,
+                                                                     "deleted": deleted}))
+        
+        # default, include_hidden flag, no hidden field specified
+        self.assertEquals({"test": 3, "deleted": False},
+                          HiddenModel.objects._kwargs_for_query({"test": 3,
+                                                                 "include_hidden": False}))
+        self.assertEquals({"test": 3},
+                          HiddenModel.objects._kwargs_for_query({"test": 3,
+                                                                 "include_hidden": True}))
+        
+        # default, include_hidden flag and hidden field specified
+        for hidden in (True, False):
+            for deleted in (True, False):
+                self.assertEquals({"test": 3, "deleted": hidden and deleted},
+                                  HiddenModel.objects._kwargs_for_query({"test": 3,
+                                                                         "include_hidden": hidden,
+                                                                         "deleted": deleted}))
+        
+        # custom, no include_hidden flag, no hidden field specified
+        self.assertEquals({"test": 3, "disabled": False}, 
+                          CustomHiddenModel.objects._kwargs_for_query({"test": 3}))
+        
+        # custom, no include_hidden flag, hidden field specified
+        for disabled in (True, False):
+            self.assertEquals({"test": 3, "disabled": disabled},
+                              CustomHiddenModel.objects._kwargs_for_query({"test": 3,
+                                                                           "disabled": disabled}))
+        
+        # custom, include_hidden flag, no hidden field specified
+        self.assertEquals({"test": 3, "disabled": False},
+                          CustomHiddenModel.objects._kwargs_for_query({"test": 3,
+                                                                       "include_hidden": False}))
+        self.assertEquals({"test": 3},
+                          CustomHiddenModel.objects._kwargs_for_query({"test": 3,
+                                                                       "include_hidden": True}))
+        
+        # custom, include_hidden flag and hidden field specified
+        for hidden in (True, False):
+            for disabled in (True, False):
+                self.assertEquals({"test": 3, "disabled": hidden and disabled},
+                                  CustomHiddenModel.objects._kwargs_for_query({"test": 3,
+                                                                               "include_hidden": hidden,
+                                                                               "disabled": disabled}))
+    
     def test_all(self):
         HiddenModel.objects.all(include_hidden=True).delete()
         CustomHiddenModel.objects.all(include_hidden=True).delete()
@@ -164,7 +217,40 @@ class HideableModelManagerTests(TestCase):
                           include_hidden=True, name="test-3014")
     
     def test_get_or_create(self):
-        # default
+        # default, model doesn't exist, no defaults or hidden field specified
+        hm1, created = HiddenModel.objects.get_or_create(name="test-1144")
+        self.assertFalse(hm1.deleted)
+        self.assertTrue(created)
+        
+        # default, model doesn't exist, hidden field specified
+        for deleted, name in ((True, "test-7664"), (False, "test-3191")):
+            hm, created = HiddenModel.objects.get_or_create(name=name,
+                                                            deleted=deleted)
+            self.assertEquals(deleted, hm.deleted)
+            self.assertTrue(created)
+        
+        # default, model doesn't exist, defaults specified
+        for deleted, name in ((True, "test-1314"), (False, "3792")):
+            hm, created = HiddenModel.objects.get_or_create(name=name,
+                                                            defaults={"deleted": deleted})
+            self.assertEquals(deleted, hm.deleted)
+            self.assertTrue(created)
+        
+        # default, non-hidden model exists, no defaults or hidden field specified
+        hm2, created = HiddenModel.objects.get_or_create(name="test-1144")
+        self.assertEquals(hm2, hm1)
+        self.assertFalse(created)
+        
+        # default, hidden model exists, no defaults or hidden field specified
+        hm3 = HiddenModel.objects.create(name="test-6840", deleted=True)
+        self.assertRaises(HiddenObjectError, HiddenModel.objects.get_or_create,
+                          name="test-6840")
+        
+        # default, non-hidden model exists, hidden field specified
         
         # custom
+        
+        '''
+        need to test with or without defaults or hidden field specified
+        '''
         pass

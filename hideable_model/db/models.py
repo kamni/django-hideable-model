@@ -1,9 +1,9 @@
-from django.db import models
+from django.db import models, IntegrityError
 
 
 class HideableModelManager(models.Manager):
     """ 
-    A model manager to allow hiding or 'deleting' objects for a given model 
+    A model manager to allow hiding or 'deleting' objects for a given Model 
     without actually removing them from the database. Overrides the regular 
     query methods ('get', 'filter', 'all') to automatically ignore any 
     hidden/deleted objects. The 'include_hidden' can be passed to any of the
@@ -17,11 +17,19 @@ class HideableModelManager(models.Manager):
     
     NOTES: 
     
-    1) Use the get_or_create method with caution. While the get_or_create does 
-       recognize hidden models to avoid creating database conflicts, this can 
-       also cause confusion for users if a view does a get_or_create matching a 
-       hidden object but the user is unable to see the object just created in 
-       the UI because it ends up being hidden.
+    1) Use the get_or_create method with caution. If you try to get_or_create
+       an object that already exists and has been hidden, it will throw a
+       HiddenObjectError. This is to prevent accidentally giving users access 
+       to objects that they would not otherwise be able to edit themselves due 
+       to being "deleted". 
+       
+       This behavior can be overridden by explicitly including the hidden field 
+       as part of the lookup params (e.g. deleted=True) or the defaults.
+       
+    2) If the 'include_hidden' param is specified and it conflicts with the 
+       actual hidden field's lookup value (e.g., include_hidden=False and 
+       deleted=True), 'include_hidden' will override the hidden field lookup
+       value.
     
     """
     hidden_field_name = "deleted"
@@ -29,9 +37,11 @@ class HideableModelManager(models.Manager):
     def _kwargs_for_query(self, kwargs):
         # filter out objects with the flag indicating that they should be 
         # hidden, unless specified otherwise
-        if kwargs.get('include_hidden', False):
-            kwargs.pop('include_hidden')
-        else:
+        add_hidden_param = not self.hidden_field_name in kwargs
+        if 'include_hidden' in kwargs:
+            add_hidden_param = not kwargs.pop('include_hidden')
+        
+        if add_hidden_param:
             kwargs[self.hidden_field_name] = False
         return kwargs
     
@@ -64,18 +74,32 @@ class HideableModelManager(models.Manager):
         return super(HideableModelManager, self).get(**kwargs)
     
     def get_or_create(self, defaults=None, **kwargs):
-        # Overridden from parent class to avoid skipping 'deleted' objects
-        if not (self.hidden_field_name in kwargs or 
-                (defaults and self.hidden_field_name not in defaults)):
-            defaults = defaults or {}
-            defaults[self.hidden_field_name] = False
+        # Overridden from parent class to avoid skipping 'deleted' objects.
+        #
+        # If the hidden field is included either as part of the kwargs or the
+        # defaults, it will be used to determine whether to include hidden
+        # objects in the 'get' search. If hidden objects are not included, but 
+        # the lookup parameters would return a result if hidden objects had
+        # been included, it raises a HiddenObjectError instead to prevent 
+        # giving users/apps accidental access to objects for which they might 
+        #not have permission.
         
-        lookup, params = self._extract_model_params(defaults, **kwargs)
-        self._for_write = True
+        '''
+        case 1: straightforward
+        case 2: include_hidden brings a result, but not regular, and include_hidden was intentional
+        case 3: include_hidden brings a result, but not regular, and include_hidden was not included
+        '''
+        include_hidden = (self.hidden_field_name in kwargs or
+                          (defaults and self.hidden_field_name in defaults))
+        
         try:
-            return self.get(include_hidden=True, **lookup), False
+            obj = self.get(include_hidden=include_hidden, **kwargs)
+            if not include_hidden and self.filter(include_hidden=True, **lookup):
+                raise HiddenObjectError('Object exists but is hidden. Lookup: %s'
+                                        % lookup)
+            return obj, False
         except self.model.DoesNotExist:
-            return self._create_object_from_params(lookup, params)
+            return self.create(**kwargs)
 
 
 class AbstractHideableModel(models.Model):
@@ -88,3 +112,7 @@ class AbstractHideableModel(models.Model):
     
     class Meta:
         abstract = True
+
+
+class HiddenObjectError(IntegrityError):
+    pass
