@@ -280,10 +280,67 @@ class HideableModelManagerTests(TestCase):
                                                                     defaults={"deleted": default})
                     self.assertEquals(deleted, hm.deleted)
                     self.assertFalse(created)
+
+        # custom, model doesn't exist, no defaults or hidden field specified
+        chm1, created = CustomHiddenModel.objects.get_or_create(name="test-1144")
+        self.assertFalse(chm1.disabled)
+        self.assertTrue(created)
         
-        # custom
+        # custom, model doesn't exist, hidden field specified
+        for disabled, name in ((True, "test-7664"), (False, "test-3191")):
+            chm, created = CustomHiddenModel.objects.get_or_create(
+                            name=name, disabled=disabled)
+            self.assertEquals(disabled, chm.disabled)
+            self.assertTrue(created)
         
-        '''
-        need to test with or without defaults or hidden field specified
-        '''
-        pass
+        # custom, model doesn't exist, defaults specified
+        for disabled, name in ((True, "test-1314"), (False, "3792")):
+            chm, created = CustomHiddenModel.objects.get_or_create(
+                            name=name, defaults={"disabled": disabled})
+            self.assertEquals(disabled, chm.disabled)
+            self.assertTrue(created)
+        
+        # custom, non-hidden model exists, no defaults or hidden field specified
+        chm2, created = CustomHiddenModel.objects.get_or_create(name="test-1144")
+        self.assertEquals(chm2, chm1)
+        self.assertFalse(created)
+        
+        # custom, hidden model exists, no defaults or hidden field specified
+        chm3 = CustomHiddenModel.objects.create(name="test-6840", disabled=True)
+        self.assertRaises(HiddenObjectError, CustomHiddenModel.objects.get_or_create,
+                          name="test-6840")
+        
+        # custom, non-hiddend and hidden model exists, hidden field specified
+        for name, disabled, old_chm in (("test-1144", False, chm1), 
+                                      ("test-6840", True, chm3)):
+            chm, created = CustomHiddenModel.objects.get_or_create(name=name, disabled=disabled)
+            self.assertEquals(chm, old_chm)
+            self.assertFalse(created)
+        
+        for name, disabled in (("test-1144", True), ("test-6840", False)):
+            chm, created = CustomHiddenModel.objects.get_or_create(name=name, disabled=disabled)
+            self.assertEquals(disabled, chm.disabled)
+            self.assertTrue(created)
+        
+        # custom, hidden and non-hidden model exists, defaults specified
+        chm4 = CustomHiddenModel.objects.create(name="test-1145", disabled=False)
+        chm5 = CustomHiddenModel.objects.create(name="test-6841", disabled=True)
+        for name, disabled, old_chm in (("test-1145", False, chm4),
+                                      ("test-6841", True, chm5)):
+            for default in (True, False):
+                chm, created = CustomHiddenModel.objects.get_or_create(
+                                name=name, defaults={"disabled": disabled})
+                self.assertEquals(chm, old_chm)
+                self.assertEquals(disabled, chm.disabled)
+                self.assertFalse(created)
+        
+        # custom, hidden and non-hidden model exists, defaults and hidden 
+        # field specified (should go with hidden params)
+        for name in ("test-1144", "test-6840"):
+            for default in (True, False):
+                for disabled in (True, False):
+                    chm, created = CustomHiddenModel.objects.get_or_create(
+                                    name=name, disabled=disabled, defaults={"disabled": disabled})
+                    self.assertEquals(disabled, chm.disabled)
+                    self.assertFalse(created)
+        
