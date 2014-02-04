@@ -37,3 +37,6 @@ so the test models get created.
 ## Usage
 
 TODO: write
+
+[need to note that you must use one of the hideable admin classes in order to
+ work with hidden objects]
