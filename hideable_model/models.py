@@ -7,7 +7,7 @@ from django.db import models
 
 ################################################################################
 # Test Models -- Hack to deal with testrunner issues that ignore test models   #
-# when using sqlite databases                                                  #
+# when using in-memory sqlite databases                                        #
 ################################################################################
 
 if 'test' in sys.argv:
@@ -15,7 +15,7 @@ if 'test' in sys.argv:
 
     class HiddenModel(models.Model):
         name = models.CharField(max_length=10)
-        deleted = models.BooleanField()
+        deleted = models.BooleanField(default=False)
         objects = HideableModelManager() 
     
     
@@ -25,5 +25,5 @@ if 'test' in sys.argv:
       
     class CustomHiddenModel(models.Model):
         name = models.CharField(max_length=10)
-        disabled = models.BooleanField()
+        disabled = models.BooleanField(default=False)
         objects = CustomHiddenManager()

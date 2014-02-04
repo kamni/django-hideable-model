@@ -246,7 +246,40 @@ class HideableModelManagerTests(TestCase):
         self.assertRaises(HiddenObjectError, HiddenModel.objects.get_or_create,
                           name="test-6840")
         
-        # default, non-hidden model exists, hidden field specified
+        # default, non-hiddend and hidden model exists, hidden field specified
+        for name, deleted, old_hm in (("test-1144", False, hm1), 
+                                      ("test-6840", True, hm3)):
+            hm, created = HiddenModel.objects.get_or_create(name=name, deleted=deleted)
+            self.assertEquals(hm, old_hm)
+            self.assertFalse(created)
+        
+        for name, deleted in (("test-1144", True), ("test-6840", False)):
+            hm, created = HiddenModel.objects.get_or_create(name=name, deleted=deleted)
+            self.assertEquals(deleted, hm.deleted)
+            self.assertTrue(created)
+        
+        # default, hidden and non-hidden model exists, defaults specified
+        hm4 = HiddenModel.objects.create(name="test-1145", deleted=False)
+        hm5 = HiddenModel.objects.create(name="test-6841", deleted=True)
+        for name, deleted, old_hm in (("test-1145", False, hm4),
+                                      ("test-6841", True, hm5)):
+            for default in (True, False):
+                hm, created = HiddenModel.objects.get_or_create(name=name, 
+                                                                defaults={"deleted": deleted})
+                self.assertEquals(hm, old_hm)
+                self.assertEquals(deleted, hm.deleted)
+                self.assertFalse(created)
+        
+        # default, hidden and non-hidden model exists, defaults and hidden 
+        # field specified (should go with hidden params)
+        for name in ("test-1144", "test-6840"):
+            for default in (True, False):
+                for deleted in (True, False):
+                    hm, created = HiddenModel.objects.get_or_create(name=name,
+                                                                    deleted=deleted,
+                                                                    defaults={"deleted": default})
+                    self.assertEquals(deleted, hm.deleted)
+                    self.assertFalse(created)
         
         # custom
         
