@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 base_config = {'name': 'model_ninja',
-               'version': '0.1',
+               'version': '0.0.1',
                'description': 'Django libraries to facilitate hiding models instead of deleting them.',
                'long_description': open(os.path.join(ROOT, 'README.md')).read(),
                'author': 'J Leadbetter',
