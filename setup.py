@@ -15,7 +15,12 @@ base_config = {'name': 'model_ninja',
                'include_package_data': True,
                'zip_safe': False,
                'install_requires': ['Django>=1.5'],
-               # TODO: include classifiers
+               'classifiers': ['Development Status :: 2 - Pre-Alpha',
+                               'Environment :: Web Environment',
+                               'Framework :: Django',
+                               'Intended Audience :: Developers',
+                               'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
+                               'Programming Language :: Python :: 2 :: Only']
               }
                         
 if 'develop' in sys.argv:
