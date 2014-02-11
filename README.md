@@ -1,5 +1,8 @@
 # django-model-ninja
 
+[Note: this project is still in development and has not even reached alpha.
+Please expect complete overhauls between versions]
+
 This Django library provides a model manager and admin interfaces that can be
 used to work with models that should be hidden or disabled instead of deleted.
 This particular functionality may be useful for applications where you have
@@ -28,7 +31,7 @@ handle all validation gracefully]
 
 The easiest way to get the latest stable version is to simply do:
 
-    pip install django-hideable-model
+    pip install django-model-ninja
 
 For developers wanting to work with the most recent code:
 

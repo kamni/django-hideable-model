@@ -2,8 +2,8 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.test import TestCase
 
-from hideable_model.models import HiddenModel, CustomHiddenModel
-from hideable_model.db.models import *
+from model_ninja.models import HiddenModel, CustomHiddenModel
+from model_ninja.db.models import *
 
 
 class HideableModelManagerTests(TestCase):
